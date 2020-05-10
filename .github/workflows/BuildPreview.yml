@@ -10,7 +10,6 @@ jobs:
         run: |
           echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.repository }}'"
       - name: PONG - Dispatch response to received PING
-        if: github.event.action == 'ping'
         run: |
           curl -X POST https://api.github.com/repos/jobobby04/TachiyomiSY/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
@@ -22,21 +21,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        if: github.event.action == 'ping'
         with:
           repository: 'jobobby04/TachiyomiSY'
           fetch-depth: '0'
           ref: 'master'
       - name: set up JDK 1.8
-        if: github.event.action == 'ping'
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
       - name: Get NDK 
-        if: github.event.action == 'ping'
         run: sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;20.0.5594570"
       - name: Write Version.kt
-        if: github.event.action == 'ping'
         uses: DamianReeves/write-file-action@v1.0
         with:
           # The path to the file to write
@@ -46,7 +41,6 @@ jobs:
           # The mode of writing to use: `overwrite`, `append`, or `preserve`.
           write-mode: overwrite # optional, default is preserve
       - name: Write google-services.json
-        if: github.event.action == 'ping'
         uses: DamianReeves/write-file-action@v1.0
         with:
           # The path to the file to write
@@ -56,10 +50,8 @@ jobs:
           # The mode of writing to use: `overwrite`, `append`, or `preserve`.
           write-mode: overwrite # optional, default is preserve
       - name: Build Release APK
-        if: github.event.action == 'ping'
         run: bash ./gradlew assembleRelease --stacktrace
       - name: Sign Android release
-        if: github.event.action == 'ping'
         uses: r0adkll/sign-android-release@v1
         with:
           # The directory to find your release to sign
@@ -73,7 +65,6 @@ jobs:
           # The password for the key
           keyPassword: ${{ secrets.KEY_PASSWORD }}
       - name: Copy Build
-        if: github.event.action == 'ping'
         uses: canastro/copy-action@0.0.2
         with:
           # Source file
@@ -81,7 +72,6 @@ jobs:
           # Target file
           target: TachiyomiSY-${{ github.run_number }}.apk
       - name: Automatic Release
-        if: github.event.action == 'ping'
         uses: marvinpinto/action-automatic-releases@v1.0.0
         with:
           # GitHub secret token
