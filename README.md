@@ -1,2 +1,2 @@
-# TachiyomiSYPrieview
-A download host for TachiyomiSY prieview builds
+# TachiyomiSYPreview
+A download host for TachiyomiSY Preview builds
