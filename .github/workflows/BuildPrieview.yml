@@ -1,0 +1,88 @@
+name: Remote Dispatch Build App
+ 
+on: [repository_dispatch]
+ 
+jobs:
+  ping-pong:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Event Information
+        run: |
+          echo "Event '${{ github.event.action }}' received from '${{ github.event.client_payload.repository }}'"
+      - name: PONG - Dispatch response to received PING
+        if: github.event.action == 'ping'
+        run: |
+          curl -X POST https://api.github.com/repos/jobobby04/TachiyomiSY/dispatches \
+          -H 'Accept: application/vnd.github.everest-preview+json' \
+          -u ${{ secrets.ACCESS_TOKEN }} \
+          --data '{"event_type": "pong", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'
+		  
+  apk:
+    name: Generate APK
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'jobobby04/TachiyomiSY'
+          fetch-depth: '0'
+          ref: 'master'
+      - name: set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Get NDK 
+        run: sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;20.0.5594570"
+      - name: Write Version.kt
+        uses: DamianReeves/write-file-action@v1.0
+        with:
+          # The path to the file to write
+          path: app/src/main/java/exh/Version.kt
+          # The contents of the file
+          contents: "package exh const val syDebugVersion: String = \"${{ github.run_number }}\""
+          # The mode of writing to use: `overwrite`, `append`, or `preserve`.
+          write-mode: overwrite # optional, default is preserve
+      - name: Write google-services.json
+        uses: DamianReeves/write-file-action@v1.0
+        with:
+          # The path to the file to write
+          path: app/google-services.json
+          # The contents of the file
+          contents: ${{ secrets.GOOGLE_SERVICES_TEXT }}
+          # The mode of writing to use: `overwrite`, `append`, or `preserve`.
+          write-mode: overwrite # optional, default is preserve
+      - name: Build Release APK
+        run: bash ./gradlew assembleRelease --stacktrace
+      - name: Sign Android release
+        uses: r0adkll/sign-android-release@v1
+        with:
+          # The directory to find your release to sign
+          releaseDirectory: app/build/outputs/apk/standard/release
+          # The key used to sign your release in base64 encoded format
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          # The key alias
+          alias: ${{ secrets.ALIAS }}
+          # The password to the keystore
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          # The password for the key
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      - name: Copy file
+        uses: canastro/copy-action@0.0.2
+        with:
+          # Source file
+          source: ${{ env.SIGNED_RELEASE_FILE }}
+          # Target file
+          target: builds/TachiyomiSY-\#${{ github.run_number }}
+      - name: Automatic Release
+        uses: marvinpinto/action-automatic-releases@v1.0.0
+        with:
+          # GitHub secret token
+          repo_token: ${{ github.token }}
+          # Git tag (for automatic releases)
+          automatic_release_tag: ${{ github.run_number }} # optional
+          # Should this release be marked as a pre-release?
+          prerelease: false # optional, default is true
+          # Release title (for automatic releases)
+          title: TachiyomiSY Dev Build \#${{github.run_number }}
+          # Assets to upload to the release
+          files: builds/TachiyomiSY-\#${{ github.run_number }} # optional    
