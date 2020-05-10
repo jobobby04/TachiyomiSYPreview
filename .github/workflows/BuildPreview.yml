@@ -91,6 +91,6 @@ jobs:
           # Should this release be marked as a pre-release?
           prerelease: false # optional, default is true
           # Release title (for automatic releases)
-          title: TachiyomiSY Dev Build \#${{github.run_number }}
+          title: TachiyomiSY Dev Build ${{github.run_number }}
           # Assets to upload to the release
           files: TachiyomiSY-${{ github.run_number }}.apk # optional    
