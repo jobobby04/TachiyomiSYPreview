@@ -65,13 +65,13 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           # The password for the key
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-      - name: Copy file
+      - name: Copy Build
         uses: canastro/copy-action@0.0.2
         with:
           # Source file
           source: ${{ env.SIGNED_RELEASE_FILE }}
           # Target file
-          target: builds/TachiyomiSY-\#${{ github.run_number }}
+          target: TachiyomiSY-${{ github.run_number }}.apk
       - name: Automatic Release
         uses: marvinpinto/action-automatic-releases@v1.0.0
         with:
@@ -84,4 +84,4 @@ jobs:
           # Release title (for automatic releases)
           title: TachiyomiSY Dev Build \#${{github.run_number }}
           # Assets to upload to the release
-          files: builds/TachiyomiSY-\#${{ github.run_number }} # optional    
+          files: TachiyomiSY-${{ github.run_number }}.apk # optional    
