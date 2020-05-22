@@ -32,7 +32,7 @@ jobs:
       - name: Set NEXT_VERSION
         run: echo "::set-env name=NEXT_VERSION::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Set RELEASE_NOTES
-        run: echo "::set-output name=RELEASE_NOTES::$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s [%an] (%h)')"
+        run: echo "::set-output name=RELEASE_NOTES::$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s [%an] (%h)' | sed ':a;N;$!ba;s/\n/\\n/g')"
         id: release_notes
       - name: test
         run: echo "${{ steps.release_notes.outputs.RELEASE_NOTES }}"
