@@ -61,7 +61,7 @@ jobs:
           contents: "package exh const val syDebugVersion: String = \"${{ github.run_number }}\""
           # The mode of writing to use: `overwrite`, `append`, or `preserve`.
           write-mode: overwrite # optional, default is preserve
-      - name: Write changelog_debug.kt
+      - name: Write changelog_debug.xml
         uses: DamianReeves/write-file-action@v1.0
         with:
           # The path to the file to write
@@ -105,7 +105,7 @@ jobs:
           body: ${{ env.RELEASE_NOTES }}
           draft: false
           prerelease: false
-      - name: Upload Release Asset
+      - name: Upload Release APK
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
