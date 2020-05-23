@@ -40,7 +40,7 @@ jobs:
           echo "::set-env name=RELEASE_NOTES::$release_notes"
       - name: Set CHANGELOG
         run: |
-          changelog="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'<changelogtext>- %s [%an] (%h)</changelogtext>')"
+          changelog="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'<changelogtext>%s [%an] (%h)</changelogtext>')"
           changelog="${changelog//$'%'/%25}"
           changelog="${changelog//$'\n'/}"
           changelog="${changelog//$'\r'/}"
