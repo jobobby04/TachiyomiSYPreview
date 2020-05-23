@@ -37,10 +37,15 @@ jobs:
           echo "::set-env name=RELEASE_NOTES::$release_notes"
       - name: Set CHANGELOG
         run: |
-          changelog="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'<changelogtext>%s (%an)</changelogtext>')"
+          changelog="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'{{changelogtext}}%s (%an){{!changelogtext}}')"
           changelog="${changelog//$'%'/%25}"
           changelog="${changelog//$'\n'/}"
           changelog="${changelog//$'\r'/}"
+          changelog="${changelog//$'<'/}"
+          changelog="${changelog//$'>'/}"
+          changelog="${changelog//$'&'/}"
+          changelog="$(echo $changelog | sed -e 's/{{changelogtext}}/<changelogtext>/g')"
+          changelog="$(echo $changelog | sed -e 's/{{!changelogtext}}/<\/changelogtext>/g')"
           changelog="<?xml version=\"1.0\" encoding=\"utf-8\"?><changelog bulletedList=\"true\"><changelogversion versionName=\"${{ github.run_number }}\" changeDate=\"\">$changelog</changelogversion></changelog>"
           echo "::set-env name=CHANGELOG::$changelog"
       - name: Set up JDK 1.8
