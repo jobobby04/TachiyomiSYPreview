@@ -33,7 +33,6 @@ jobs:
         run: echo "::set-env name=NEXT_VERSION::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Set RELEASE_NOTES
         run: |
-          |
           git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s [%an] (%h)' > release_notes.txt
           release_notes="$(cat release_notes.txt)"
           release_notes="${release_notes//'%'/'%25'}"
@@ -43,7 +42,6 @@ jobs:
           echo "::set-env name=RELEASE_NOTES::$release_notes"
       - name: test
         run: |
-          |
           echo "${{ env.RELEASE_NOTES }}"
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
