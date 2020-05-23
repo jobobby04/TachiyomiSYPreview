@@ -33,7 +33,8 @@ jobs:
         run: echo "::set-env name=NEXT_VERSION::$(git describe --tags $(git rev-list --tags --max-count=1))"
       - name: Set RELEASE_NOTES
         run: |
-          release_notes="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s [%an] (%h)')"
+          git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s [%an] (%h)' > release_notes.txt
+          release_notes="$(cat release_notes.txt)"
           release_notes="${release_notes//'%'/'%25'}"
           release_notes="${release_notes//$'\n'/'%0A'}"
           release_notes="${release_notes//$'\r'/'%0D'}"
