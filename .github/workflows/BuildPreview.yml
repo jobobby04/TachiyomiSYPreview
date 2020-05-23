@@ -22,15 +22,12 @@ jobs:
         with:
           repository: 'jobobby04/TachiyomiSY'
           fetch-depth: 0
-      - name: Git fetch & pull
-        run: |
-          git fetch origin
-          git fetch origin --tags
-          git pull origin master
+      - name: Git fetch tags
+        run: git fetch --tags
       - name: Set CURRENT_VERSION
-        run: echo "::set-env name=CURRENT_VERSION::$(git describe --tags $(git rev-list --tags --max-count=2) | tail -1)"
+        run: echo "::set-env name=CURRENT_VERSION::$(git tag -l | tail -2 | head -n 1)"
       - name: Set NEXT_VERSION
-        run: echo "::set-env name=NEXT_VERSION::$(git describe --tags $(git rev-list --tags --max-count=1))"
+        run: echo "::set-env name=NEXT_VERSION::$(git tag -l | tail -1)"
       - name: Set RELEASE_NOTES
         run: |
           release_notes="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s [%an] (%h)')"
