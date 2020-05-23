@@ -36,12 +36,12 @@ jobs:
           release_notes="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s [%an] (%h)')"
           release_notes="${release_notes//'%'/'%25'}"
           release_notes="${release_notes//$'\n'/'%0A'}"
-          release_notes="${release_notes//$'\r'/'%0D'}" 
-          echo "::set-output name=RELEASE_NOTES::$release_notes"
-        id: release_notes
+          release_notes="${release_notes//$'\r'/'%0D'}"
+          echo "$release_notes"
+          echo "::set-env name=RELEASE_NOTES::$release_notes"
       - name: test
-        run:  |
-          echo "${{ steps.release_notes.outputs.RELEASE_NOTES }}"
+        run: |
+          echo "${{ env.RELEASE_NOTES }}"
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
         with:
