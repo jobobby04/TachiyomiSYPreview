@@ -25,9 +25,9 @@ jobs:
       - name: Git fetch tags
         run: git fetch --tags
       - name: Set CURRENT_VERSION
-        run: echo "::set-env name=CURRENT_VERSION::$(git tag -l | tail -2 | head -n 1)"
+        run: echo "::set-env name=CURRENT_VERSION::$(git tag -l --sort version:refname | tail -2 | head -n 1)"
       - name: Set NEXT_VERSION
-        run: echo "::set-env name=NEXT_VERSION::$(git tag -l | tail -1)"
+        run: echo "::set-env name=NEXT_VERSION::$(git tag -l --sort version:refname | tail -1)"
       - name: Set RELEASE_NOTES
         run: |
           release_notes="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s (%an)')"
