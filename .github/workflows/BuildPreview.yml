@@ -20,18 +20,19 @@ jobs:
         run: git fetch --tags
 
       - name: Set CURRENT_VERSION
-        run: echo "::set-env name=CURRENT_VERSION::$(git tag -l --sort version:refname | tail -2 | head -n 1)"
+        run: echo "CURRENT_VERSION=$(git tag -l --sort version:refname | tail -2 | head -n 1)" >> $GITHUB_ENV
 
       - name: Set NEXT_VERSION
-        run: echo "::set-env name=NEXT_VERSION::$(git tag -l --sort version:refname | tail -1)"
+        run: echo "NEXT_VERSION=$(git tag -l --sort version:refname | tail -1)" >> $GITHUB_ENV
 
       - name: Set RELEASE_NOTES
         run: |
+          set -x
           release_notes="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s (%an)')"
           release_notes="${release_notes//$'%'/%25}"
           release_notes="${release_notes//$'\n'/%0A}"
           release_notes="${release_notes//$'\r'/%0D}"
-          echo "::set-env name=RELEASE_NOTES::$release_notes"
+          echo "RELEASE_NOTES=$release_notes" >> $GITHUB_ENV
 
       - name: Set CHANGELOG
         run: |
@@ -45,7 +46,7 @@ jobs:
           changelog="$(echo $changelog | sed -e 's/{{changelogtext}}/<changelogtext>/g')"
           changelog="$(echo $changelog | sed -e 's/{{!changelogtext}}/<\/changelogtext>/g')"
           changelog="<?xml version=\"1.0\" encoding=\"utf-8\"?><changelog bulletedList=\"true\"><changelogversion versionName=\"${{ github.run_number }}\" changeDate=\"\">$changelog</changelogversion></changelog>"
-          echo "::set-env name=CHANGELOG::$changelog"
+          echo "CHANGELOG=$changelog" >> $GITHUB_ENV
 
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
