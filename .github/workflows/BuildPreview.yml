@@ -1,7 +1,7 @@
 name: Remote Dispatch Build App
- 
+
 on: [repository_dispatch]
- 
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
 
       - uses: actions/checkout@v2
         with:
-          repository: 'jobobby04/TachiyomiSY'
+          repository: "jobobby04/TachiyomiSY"
           fetch-depth: 0
 
       - name: Git fetch tags
@@ -28,7 +28,7 @@ jobs:
       - name: Set RELEASE_NOTES
         run: |
           set -x
-          release_notes="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s (%an)')"
+          release_notes="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s (@%an)')"
           release_notes="${release_notes//$'%'/%25}"
           release_notes="${release_notes//$'\n'/%0A}"
           release_notes="${release_notes//$'\r'/%0D}"
@@ -36,7 +36,7 @@ jobs:
 
       - name: Set CHANGELOG
         run: |
-          changelog="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'{{changelogtext}}%s (%an){{!changelogtext}}')"
+          changelog="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'{{changelogtext}}%s (@%an){{!changelogtext}}')"
           changelog="${changelog//$'%'/%25}"
           changelog="${changelog//$'\n'/}"
           changelog="${changelog//$'\r'/}"
@@ -64,7 +64,7 @@ jobs:
           # The path to the file to write
           path: app/src/main/java/exh/Version.kt
           # The contents of the file
-          contents: "package exh const val syDebugVersion: String = \"${{ github.run_number }}\""
+          contents: 'package exh const val syDebugVersion: String = "${{ github.run_number }}"'
           # The mode of writing to use: `overwrite`, `append`, or `preserve`.
           write-mode: overwrite # optional, default is preserve
 
