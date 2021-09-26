@@ -20,19 +20,21 @@ jobs:
         run: git fetch --tags
 
       - name: Set CURRENT_VERSION
-        run: echo "CURRENT_VERSION=$(git tag -l --sort version:refname | tail -2 | head -n 1)" >> $GITHUB_ENV
+        run: echo "CURRENT_VERSION=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 2 | tail -1)" >> $GITHUB_ENV
 
       - name: Set NEXT_VERSION
-        run: echo "NEXT_VERSION=$(git tag -l --sort version:refname | tail -1)" >> $GITHUB_ENV
+        run: echo "NEXT_VERSION=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 1)" >> $GITHUB_ENV
 
       - name: Set RELEASE_NOTES
         run: |
-          set -x
-          release_notes="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'- %s (@%an)')"
-          release_notes="${release_notes//$'%'/%25}"
-          release_notes="${release_notes//$'\n'/%0A}"
-          release_notes="${release_notes//$'\r'/%0D}"
-          echo "RELEASE_NOTES=$release_notes" >> $GITHUB_ENV
+          current_sha = echo "${{ env.CURRENT_VERSION }}"
+          next_sha = echo "${{ env.NEXT_VERSION }}"
+          echo "RELEASE_NOTES<<{delimiter}
+          $(curl -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/jobobby04/TachiyomiSY/compare/$current_sha...$next_sha" \
+            | jq '[.commits[]|{message:(.commit.message | split("\n")), username:.author.login}]' \
+            | jq -r '.[]|"- \(.message | first) (@\(.username))"')
+          {delimiter}" >> $GITHUB_ENV
 
       - name: Set CHANGELOG
         run: |
