@@ -27,8 +27,8 @@ jobs:
 
       - name: Set RELEASE_NOTES
         run: |
-          current_sha = echo "${{ env.CURRENT_VERSION }}"
-          next_sha = echo "${{ env.NEXT_VERSION }}"
+          current_sha=$(echo "${{ env.CURRENT_VERSION }}")
+          next_sha=$(echo "${{ env.NEXT_VERSION }}")
           echo "RELEASE_NOTES<<{delimiter}
           $(curl -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/jobobby04/TachiyomiSY/compare/$current_sha...$next_sha" \
