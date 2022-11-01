@@ -2,43 +2,42 @@ name: Remote Dispatch Build App
 
 on: [repository_dispatch]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  apk:
+  build-app:
     runs-on: ubuntu-latest
     steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.5.0
-        with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v2
+      - name: Clone Repository
+        uses: actions/checkout@v3
         with:
           repository: "jobobby04/TachiyomiSY"
           fetch-depth: 0
 
-      - name: Git fetch tags
-        run: git fetch --tags
-
-      - name: Set CURRENT_VERSION
-        run: echo "CURRENT_VERSION=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 2 | tail -1)" >> $GITHUB_ENV
-
-      - name: Set NEXT_VERSION
-        run: echo "NEXT_VERSION=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 1)" >> $GITHUB_ENV
-
-      - name: Set RELEASE_NOTES
+      - name: Prepare build
         run: |
-          current_sha=$(echo "${{ env.CURRENT_VERSION }}")
-          next_sha=$(echo "${{ env.NEXT_VERSION }}")
-          echo "RELEASE_NOTES<<{delimiter}
+          set -e
+
+          git fetch --tags
+
+          current_sha=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 2 | tail -1)
+          echo "CURRENT_SHA=$current_sha" >> $GITHUB_ENV
+
+          prev_release_sha=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 1)
+          echo "PREV_RELEASE_SHA=$prev_release_sha" >> $GITHUB_ENV
+          
+          echo "COMMIT_LOGS<<{delimiter}
           $(curl -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/jobobby04/TachiyomiSY/compare/$current_sha...$next_sha" \
+            "https://api.github.com/repos/jobobby04/TachiyomiSY/compare/$prev_release_sha...$current_sha" \
             | jq '[.commits[]|{message:(.commit.message | split("\n")), username:.author.login}]' \
             | jq -r '.[]|"- \(.message | first) (@\(.username))"')
           {delimiter}" >> $GITHUB_ENV
 
       - name: Set CHANGELOG
         run: |
-          changelog="$(git log ${{ env.CURRENT_VERSION }}..${{ env.NEXT_VERSION }} --pretty=format:'{{changelogtext}}%s (@%an){{!changelogtext}}')"
+          changelog="$(git log ${{ env.PREV_RELEASE_SHA }}..${{ env.CURRENT_SHA }} --pretty=format:'{{changelogtext}}%s (@%an){{!changelogtext}}')"
           changelog="${changelog//$'%'/%25}"
           changelog="${changelog//$'\n'/}"
           changelog="${changelog//$'\r'/}"
@@ -59,32 +58,23 @@ jobs:
       - name: Write Version.kt
         uses: DamianReeves/write-file-action@v1.0
         with:
-          # The path to the file to write
           path: app/src/main/java/exh/Version.kt
-          # The contents of the file
           contents: 'package exh const val syDebugVersion: String = "${{ github.run_number }}"'
-          # The mode of writing to use: `overwrite`, `append`, or `preserve`.
-          write-mode: overwrite # optional, default is preserve
+          write-mode: overwrite
 
       - name: Write changelog_debug.xml
         uses: DamianReeves/write-file-action@v1.0
         with:
-          # The path to the file to write
           path: app/src/main/res/raw/changelog_debug.xml
-          # The contents of the file
           contents: "${{ env.CHANGELOG }}"
-          # The mode of writing to use: `overwrite`, `append`, or `preserve`.
-          write-mode: overwrite # optional, default is preserve
+          write-mode: overwrite
 
       - name: Write google-services.json
         uses: DamianReeves/write-file-action@v1.0
         with:
-          # The path to the file to write
           path: app/google-services.json
-          # The contents of the file
           contents: ${{ secrets.GOOGLE_SERVICES_TEXT }}
-          # The mode of writing to use: `overwrite`, `append`, or `preserve`.
-          write-mode: overwrite # optional, default is preserve
+          write-mode: overwrite
 
       - name: Build app
         uses: gradle/gradle-command-action@v2
@@ -94,35 +84,65 @@ jobs:
       - name: Sign Android Release
         uses: r0adkll/sign-android-release@v1
         with:
-          # The directory to find your release to sign
           releaseDirectory: app/build/outputs/apk/standard/release
-          # The key used to sign your release in base64 encoded format
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          # The key alias
           alias: ${{ secrets.ALIAS }}
-          # The password to the keystore
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          # The password for the key
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+      
+      - name: Clean up build artifacts
+        run: |
+          set -e
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          mv app/build/outputs/apk/standard/release/app-standard-universal-release-unsigned-signed.apk TachiyomiSY.apk
+          sha=`sha256sum TachiyomiSY.apk | awk '{ print $1 }'`
+          echo "APK_UNIVERSAL_SHA=$sha" >> $GITHUB_ENV
+
+          cp app/build/outputs/apk/standard/release/app-standard-arm64-v8a-release-unsigned-signed.apk TachiyomiSY-arm64-v8a.apk
+          sha=`sha256sum TachiyomiSY-arm64-v8a.apk | awk '{ print $1 }'`
+          echo "APK_ARM64_V8A_SHA=$sha" >> $GITHUB_ENV
+
+          cp app/build/outputs/apk/standard/release/app-standard-armeabi-v7a-release-unsigned-signed.apk TachiyomiSY-armeabi-v7a.apk
+          sha=`sha256sum TachiyomiSY-armeabi-v7a.apk | awk '{ print $1 }'`
+          echo "APK_ARMEABI_V7A_SHA=$sha" >> $GITHUB_ENV
+
+          cp app/build/outputs/apk/standard/release/app-standard-x86-release-unsigned-signed.apk TachiyomiSY-x86.apk
+          sha=`sha256sum TachiyomiSY-x86.apk | awk '{ print $1 }'`
+          echo "APK_X86_SHA=$sha" >> $GITHUB_ENV
+          
+          cp app/build/outputs/apk/standard/release/app-standard-x86_64-release-unsigned-signed.apk TachiyomiSY-x86_64.apk
+          sha=`sha256sum TachiyomiSY-x86_64.apk | awk '{ print $1 }'`
+          echo "APK_X86_64_SHA=$sha" >> $GITHUB_ENV
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.run_number }}
-          release_name: TachiyomiSY Dev Build ${{ github.run_number }}
-          body: ${{ env.RELEASE_NOTES }}
-          draft: false
-          prerelease: false
+          name: TachiyomiSY
+          body: |
+            ---
+            ### Commits
 
-      - name: Upload Release APK
-        uses: actions/upload-release-asset@v1
+            https://github.com/jobobby04/TachiyomiSY/compare/${{ env.PREV_RELEASE_SHA }}...${{ env.CURRENT_SHA }}
+
+            ${{ env.COMMIT_LOGS }}
+
+            ### Checksums
+
+            | Variant | SHA-256 |
+            | ------- | ------- |
+            | Universal | ${{ env.APK_UNIVERSAL_SHA }} |
+            | arm64-v8a | ${{ env.APK_ARM64_V8A_SHA }} |
+            | armeabi-v7a | ${{ env.APK_ARMEABI_V7A_SHA }} |
+            | x86 | ${{ env.APK_X86_SHA }} |
+            | x86_64 | ${{ env.APK_X86_64_SHA }} |
+          files: |
+            TachiyomiSY.apk
+            TachiyomiSY-arm64-v8a.apk
+            TachiyomiSY-armeabi-v7a.apk
+            TachiyomiSY-x86.apk
+            TachiyomiSY-x86_64.apk
+          draft: true
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.SIGNED_RELEASE_FILE }}
-          asset_name: TachiyomiSY_${{ github.run_number }}.apk
-          asset_content_type: application/vnd.android.package-archive
