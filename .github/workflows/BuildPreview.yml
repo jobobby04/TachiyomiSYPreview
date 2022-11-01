@@ -22,11 +22,11 @@ jobs:
 
           git fetch --tags
 
-          current_sha=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 1)
-          echo "CURRENT_SHA=$current_sha" >> $GITHUB_ENV
-
           prev_release_sha=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 2 | tail -1)
           echo "PREV_RELEASE_SHA=$prev_release_sha" >> $GITHUB_ENV
+          
+          current_sha=$(git log --oneline --decorate --tags --no-walk --pretty='%C(auto)%h' | head -n 1)
+          echo "CURRENT_SHA=$current_sha" >> $GITHUB_ENV
           
           echo "COMMIT_LOGS<<{delimiter}
           $(curl -H "Accept: application/vnd.github.v3+json" \
@@ -142,7 +142,7 @@ jobs:
             TachiyomiSY-armeabi-v7a.apk
             TachiyomiSY-x86.apk
             TachiyomiSY-x86_64.apk
-          draft: true
+          draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
