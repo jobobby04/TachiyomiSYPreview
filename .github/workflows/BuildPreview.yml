@@ -120,12 +120,13 @@ jobs:
           tag_name: ${{ github.run_number }}
           name: TachiyomiSY Dev Build ${{ github.run_number }}
           body: |
-            ---
             ### Commits
 
             https://github.com/jobobby04/TachiyomiSY/compare/${{ env.PREV_RELEASE_SHA }}...${{ env.CURRENT_SHA }}
 
             ${{ env.COMMIT_LOGS }}
+
+            ---
 
             ### Checksums
 
