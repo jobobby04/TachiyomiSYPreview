@@ -56,21 +56,21 @@ jobs:
           distribution: adopt
 
       - name: Write Version.kt
-        uses: DamianReeves/write-file-action@v1.0
+        uses: DamianReeves/write-file-action@v1.2
         with:
           path: app/src/main/java/exh/Version.kt
           contents: 'package exh const val syDebugVersion: String = "${{ github.run_number }}"'
           write-mode: overwrite
 
       - name: Write changelog_debug.xml
-        uses: DamianReeves/write-file-action@v1.0
+        uses: DamianReeves/write-file-action@v1.2
         with:
           path: app/src/main/res/raw/changelog_debug.xml
           contents: "${{ env.CHANGELOG }}"
           write-mode: overwrite
 
       - name: Write google-services.json
-        uses: DamianReeves/write-file-action@v1.0
+        uses: DamianReeves/write-file-action@v1.2
         with:
           path: app/google-services.json
           contents: ${{ secrets.GOOGLE_SERVICES_TEXT }}
