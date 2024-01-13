@@ -49,6 +49,10 @@ jobs:
           changelog="<?xml version=\"1.0\" encoding=\"utf-8\"?><changelog bulletedList=\"true\"><changelogversion versionName=\"${{ github.run_number }}\" changeDate=\"\">$changelog</changelogversion></changelog>"
           echo "CHANGELOG=$changelog" >> $GITHUB_ENV
 
+      - name: Setup Android SDK
+        run: |
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.3"
+
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
