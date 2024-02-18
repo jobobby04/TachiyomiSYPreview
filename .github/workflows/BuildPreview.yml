@@ -24,10 +24,10 @@ jobs:
           ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.3"
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: adopt
+          distribution: temurin
 
       - name: Prepare build
         run: |
@@ -63,21 +63,21 @@ jobs:
           echo "CHANGELOG=$changelog" >> $GITHUB_ENV
 
       - name: Write Version.kt
-        uses: DamianReeves/write-file-action@v1.2
+        uses: DamianReeves/write-file-action@v1.3
         with:
           path: app/src/main/java/exh/Version.kt
           contents: 'package exh const val syDebugVersion: String = "${{ github.run_number }}"'
           write-mode: overwrite
 
       - name: Write changelog_debug.xml
-        uses: DamianReeves/write-file-action@v1.2
+        uses: DamianReeves/write-file-action@v1.3
         with:
           path: app/src/main/res/raw/changelog_debug.xml
           contents: "${{ env.CHANGELOG }}"
           write-mode: overwrite
 
       - name: Write google-services.json
-        uses: DamianReeves/write-file-action@v1.2
+        uses: DamianReeves/write-file-action@v1.3
         with:
           path: app/google-services.json
           contents: ${{ secrets.GOOGLE_SERVICES_TEXT }}
