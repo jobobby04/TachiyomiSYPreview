@@ -91,12 +91,12 @@ jobs:
           write-mode: overwrite
 
       - name: Build app
-        run: ./gradlew assembleStandardRelease --stacktrace
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Sign Android Release
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: app/build/outputs/apk/standard/release
+          releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
